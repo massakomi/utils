@@ -1,0 +1,59 @@
+# Обновление базы SxGeoCity.dat  - task-55087
+5 0 * * 1 php /home/bitrix/pub/new.synergetic.ru/www/local/modules/aim.geo.ip/lib/SxGeo/SxGeoCityUtf8Update.php
+
+# Задание 55229 Актуализировать подборку товаров в категории “Новинки”
+0 2 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/moveProductsToSectionNew.php
+
+# Generate Elastic Index
+45 0 * * * php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php genElasticIndex >> /var/log/elastic.log 2>&1
+#25 9 * * * php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php genElasticIndex
+
+# Удаляем брошенные корзины (не связанные с заказами) старше одного года
+10 1 6 * * php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php deleteCartsOlderThan1Year
+
+# ПолучениПВЗ из B2CPL
+0 1 * * * php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php uploadPVZB2CPL
+# Просчет процента скидки у всех товаров
+30 0 * * * php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php updateAllPercent
+# Обновление/добавление индексов городам (добавление городов и деактивация если нет)
+1 22 * * * php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php updateCityZip
+# Обновление/добавление времени доставки (рабочих дней)
+2 22 * * * php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php getDeliveryDay
+# Обновление таблицы с ценами доставки до всех городов
+#32 5 * * * php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php updateDeliveryPrice
+
+# Full clean Redis
+0 23 * * 0 php /home/bitrix/pub/new.synergetic.ru/www/synergetic.php clearRedis
+0 1 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/mindbox/deleteOldLogs.php
+# Feeds
+1 10,18,02 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/mindbox/generateVKFeed.php
+1 10,18,02 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/mindbox/generateYandexFeed.php
+1 10,18,02 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/mindbox/generateMindboxFeed.php
+0 2 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/mindbox/generatePriceRuFeed.php
+0 2 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/mindbox/generateGreenWaveFeed.php
+0 10,14,19 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/clearMindboxCache.php
+0 9 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/generateTrackAdFeed.php
+0 */2 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/setGoogleDocPrices.php
+1 10,18,02 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/generateBlogFeed.php
+0 6 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/fillCollectionSuperSale.php
+10 6 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/fillCollectionBestPrice.php
+
+# Передача в майндбокс статусов сообщений Viber
+0 7,10,13,16,23 * * * php /home/bitrix/pub/new.synergetic.ru/www/console.php SMSC importViberReadedMessages
+# Очистка старых логов по сообщениям Viber
+0 0 * * * php /home/bitrix/pub/new.synergetic.ru/www/console.php SMSC clearViberMessages
+# Передача в майндбокс статусов сообщений WA
+0 */2 * * * php /home/bitrix/pub/new.synergetic.ru/www/console.php Edna importWAMessagesStatuses synergetic
+0 */2 * * * php /home/bitrix/pub/new.synergetic.ru/www/console.php Edna importWAMessagesStatuses 4fresh
+# Очистка старых логов по сообщениям WA
+0 0 * * * php /home/bitrix/pub/new.synergetic.ru/www/console.php Edna clearWAMessages
+# очистка HL Yandex client id
+0 3 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/clearYclidTrackingRows.php &>/dev/null
+# Отправка данных с YandexClientID в дополнительную БД
+0 */2 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/sendYclidTrackingToDB.php &>/dev/null
+# Передача просмотра карточки\раздела товара
+0 *\1 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/sendTrackingToExtDB.php &>/dev/null
+# Очистка старых данных по просмотру карточки товара
+0 3 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/clearTrackingHlbRows.php &>/dev/null
+# передача даты следующего розыгрыша в Mindbox
+0 3 * * * php /home/bitrix/pub/new.synergetic.ru/www/local/cron/sendGreenwDateToMB.php &/dev/null
