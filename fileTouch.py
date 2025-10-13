@@ -1,13 +1,54 @@
 import datetime
 import os
 import re
+import textwrap
+import tkinter
 from tkinter import *
 from tkinter import ttk
+from tkinter.messagebox import showerror
+from tkinter.scrolledtext import ScrolledText
 
 
 class FileManage:
     def __init__(self, form):
         self.form = form
+
+    def exec(self, confirm=True):
+        self.form.results.delete(1.0, END)
+
+        path = self.form.path.get()
+        if not os.path.exists(path) or not os.path.isdir(path):
+            self.error("Папка не найдена или это не папка")
+            return
+
+        # собираем подпапки
+        folders = self.collectFolders(path, self.form.include_subdirs)
+        if len(folders) == 0:
+            self.error("Файлы не найдены")
+            return
+
+        # собираем пути файлов
+        files = self.collectFiles(folders)
+        sorted(files, key=lambda item: item['name'])
+
+        output = []
+        for file in self.filter(files):
+            path = file['path']
+            old = file['name']
+            new = self.filePrepare(old)
+            if confirm:
+                path = self.rename(path, old, new)
+                self.fileProcess(path)
+            output.append(f'{old} -> {new}')
+
+        self.form.results.insert(END, "\n".join(output) + "\n")
+
+    def view(self):
+        self.exec(confirm=False)
+
+    def error(self, message):
+        output = textwrap.wrap(message, width=80)
+        self.form.results.insert(END, "\n".join(output) + "\n")
 
     @staticmethod
     def collectFolders(path, include_subdirs):
@@ -46,14 +87,21 @@ class FileManage:
             filename = filename.replace(replace_from, replace_to)
         return filename
 
-    def fileProcess(self, path, old, new):
+    def rename(self, path, old, new):
         if old != new:
             dir = os.path.splitext(path)[0]
             newPath = os.path.join(dir, new)
             if not os.path.exists(newPath):
-                os.rename(path, newPath)
-                path = newPath
+                try:
+                    os.rename(path, newPath)
+                    path = newPath
+                except Exception as e:
+                    self.error(f'Ошибка переименования - {str(e)} ({type(e).__name__})')
+            else:
+                self.error(f'Ошибка переименование - файл ${newPath} уже существует')
+        return path
 
+    def fileProcess(self, path):
         set_date = self.form.set_date.get()
         if set_date:
             try:
@@ -61,7 +109,7 @@ class FileManage:
                 timestamp = date.timestamp()
                 os.utime(path, (timestamp, timestamp))
             except Exception as e:
-                print('Ошибка выполнения ('+type(e).__name__+')')
+                self.error(f'Ошибка обработки - {str(e)} ({type(e).__name__})')
 
     def filter(self, files):
         extensionFilter = self.form.extension.get()
@@ -74,33 +122,6 @@ class FileManage:
                     print(f'{extension} != {extensionFilter}')
                     continue
             yield file
-
-    def exec(self, confirm=True):
-
-        path = self.form.path.get()
-        if not os.path.exists(path):
-            raise FileNotFoundError
-
-        # собираем подпапки
-        folders = self.collectFolders(path, self.form.include_subdirs)
-
-        # собираем пути файлов
-        files = self.collectFiles(folders)
-        sorted(files, key=lambda item: item['name'])
-
-        output = []
-        for file in self.filter(files):
-            path = file['path']
-            old = file['name']
-            new = self.filePrepare(old)
-            if confirm:
-                self.fileProcess(path, old, new)
-            output.append(f'{old} -> {new}')
-
-        self.form.results.set("\n".join(output))
-
-    def view(self):
-        self.exec(confirm=False)
 
 class Display:
     def __init__(self):
@@ -153,7 +174,7 @@ class Display:
         self.grid(label, position)
 
     def add_select(self, frame, position: list, values: list, textvariable):
-        combobox = ttk.Combobox(frame, textvariable=textvariable, values=values)
+        combobox = ttk.Combobox(frame, textvariable=textvariable, values=values, state="readonly")
         self.grid(combobox, position)
 
     def build(self):
@@ -164,12 +185,12 @@ class Display:
         self.add_label(frame, [1, 0], 'Только с расширением:')
         self.add_text_input(frame, [1, 1, 1, 5], self.extension)
         self.add_checkbox(frame, [1, 2], "Включая подпапки", self.include_subdirs)
-        list = ['операция', 'lower', 'upper', 'capitalize']
+        list = ['lower', 'upper', 'capitalize']
         self.add_select(frame, [1, 3], list, self.operation)
 
         self.add_label(frame, [2, 0], 'Заменить:')
-        self.add_text_input(frame, [2, 1, 1, 20], self.replace_from)
-        self.add_text_input(frame, [2, 2, 1, 20], self.replace_to)
+        self.add_text_input(frame, [2, 1, 1, 20], self.replace_from, default='e')
+        self.add_text_input(frame, [2, 2, 1, 20], self.replace_to, default='%')
 
         self.add_label(frame, [3, 0, 1, 20], 'Изм-ть дату (Y-m-d):')
         self.add_text_input(frame, [3, 1], self.set_date)
@@ -179,8 +200,9 @@ class Display:
         self.add_button(frame, [4, 1], file.view, 'Показать')
 
         # result message
-        label = Label(text="", textvariable=self.results, justify=LEFT)
-        label.pack(anchor=NW, side=LEFT)
+        self.results = ScrolledText(wrap=tkinter.constants.NONE)
+        self.results.pack(fill=BOTH, padx=1, pady=1, expand=True)
+        self.results.config(font=("consolas", 10), undo=True)
 
 
 root = Tk()
