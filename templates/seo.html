@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+<title>SEO утилиты</title>
+    <style type="text/css">
+form, div.row {margin-bottom:10px;}
+#loader {
+    background: white url('/templates/loading.gif') center center no-repeat;
+    width: 64px;
+    height: 16px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 10px;
+    border: 1px solid #eee;
+    display:none;
+}
+</style>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        document.getElementById('errorBlock').innerHTML += 'Ajax error '+settings.url + '<br />';
+    });
+    $(document).ajaxStart(function() {
+        $('#loader').show();
+    });
+    $(document).ajaxComplete(function() {
+        $('#loader').hide();
+    });
+});
+
+// Сканирование сайта
+function startScan(form)
+{
+    var link = $(form).find('input[name=scan]').val();
+    processLink(link, '')
+    /*$.post('', $(form).serialize(), function(data) {
+        var links = JSON.parse(data)
+        alert(links[0]);
+        // $('#scanResults').html(data);
+    });*/
+}
+counts = 1
+function processLink(link, referer)
+{
+    if ($('td[data-link="'+link+'"]').length) {
+        return ;
+    }
+    $('#scanResults').prop('hidden', false)
+    $('#scanResults').append('<tr><td>'+counts+') <a href="'+link+'" title="Ref: '+referer+'">'+link+'</a></td><td data-link="'+link+'"></td></tr>')
+    counts ++
+    $.post('', 'link='+link, function(data) {
+        var data = JSON.parse(data)
+        $('td[data-link="'+link+'"]').html('<b>'+data.length+'</b>');
+        if (data.links) {
+            for (var i in data.links) {
+                sublink = data.links[i];
+                processLink(sublink, link)
+            }
+        }
+    })
+}
+</script>
+</head>
+<body>
+
+
+<div id="loader"></div>
+<div id="errorBlock" style="color:red"></div>
+
+<div class="row"><a href="?nocash=1">Обновить кэш</a></div>
+
+
+<form method="post">
+    <input type="text" name="urlLinks" placeholder="Показать ссылки со страницы" style="width:500px;" value="{{ urlLinks }}" />
+    <input type="submit" value="Показать ссылки со страницы" />
+</form>
+
+
+<form method="post">
+    <input type="text" name="urlTest" placeholder="Быстрый тест url (статус, location, strlen)" style="width:500px;" value="{{ urlTest }}" />
+    <input type="submit" value="Быстрый тест url (статус, location, strlen)" />
+</form>
+
+
+<form method="post">
+    <input type="text" name="seoTest" placeholder="Полный тест url" style="width:500px;" value="{{ seoTest }}" />
+    <input type="submit" value="Полный тест url" />
+</form>
+<!--
+<form method="post">
+    <input type="text" name="siteTest" placeholder="SEO анализ сайта" style="width:500px;" value="" />
+    <input type="submit" value="Go" />
+</form>
+-->
+
+
+
+
+
+
+<!--
+Блок сканирования сайта
+-->
+
+<form method="post" onsubmit="startScan(this); return false;">
+    <input type="text" name="scan" placeholder="http://site.ru" style="width:500px;" value="" />
+    <input type="submit" value="Сканирование сайта" />
+</form>
+
+<table id="scanResults" hidden="true">
+<tr>
+    <td>Ссылка</td>
+    <td>Результаты</td>
+</tr>
+</table>
+
+
+{{ content }}
+
+
+</body>
+</html>
