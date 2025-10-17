@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
+    <title>Seo check</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+    #loader {
+      background: white url('{{ url_for('static', filename='loading.gif') }}') center center no-repeat;
+        width: 64px;
+        height: 16px;
+        position: fixed;
+        top: 0;
+        left: 50%;
+        padding: 10px;
+        border: 1px solid #eee;
+        display:none;
+        background-size: contain;
+    }
+    </style>
+    <script type="text/javascript">
+    function alertAjax(query)
+    {
+        // идея неплохая, но куда разместить outputContent (в угол справа? а если большой контент)
+        $.post('', query, function(data) {
+            $('#outputContent').html(data)
+        });
+    }
+    $(document).ready(function(){
+        $(document).ajaxSend(function() {
+            $('#loader').show();
+        });
+        $(document).ajaxStop(function() {
+            $('#loader').hide();
+        });
+        $('input[type=submit]').click(function(data) {
+            var h = $(this).parents('form').find('input[name=submit]');
+            h.val(this.name)
+        })
+        /*$('.clickshow').click(function() {
+            $(this).removeClass('clickshow')
+            $(this).next().show()
+        })*/
+        $('.auto').submit(function(data) {
+            var form = this
+            $.post('', $(this).serialize(), function(data) {
+                $(form).find('.result').html(data)
+            });
+            return false;
+        })
+    });
+    </script>
+</head><body>
+    <div id="loader"></div>
+
+<form method="post" class="auto">
+    <input type="hidden" name="submit" value="">
+    <input type="text" name="url" style="width: 500px" value="https://zomro.com/rus/blog/faq/476-how-to-deploy-a-python-application-to-docker-compose" />
+    <input type="submit" name="get-links" value="Показать ссылки" />
+    <input type="submit" name="analise-url" value="Анализировать url" />
+    <hr />
+    <div class="result"></div>
+</form>
+
+</body></html>

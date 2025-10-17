@@ -6,16 +6,11 @@ import pprint
 import re
 import urllib
 from typing import Optional
+from urllib.parse import urlparse
 from urllib.parse import urlparse, urljoin
 
 import requests
-from numpy.f2py.auxfuncs import throw_error
 from requests.auth import HTTPBasicAuth
-from strip_tags import strip_tags
-import re
-from urllib.parse import urlparse, urljoin
-
-import requests
 from strip_tags import strip_tags
 
 
@@ -88,19 +83,18 @@ def scanFiles(dir, opts=None):
     return data
 
 class cacher(object):
-    content = ''
-    cache = True
-    expired = 0
-    url = ''
+
     def __init__(self, url, cache, expired, ext=False):
         self.url = url
         self.cache = cache
         self.expired = expired
         self.ext = ext
+        self.fileName = ''
+        self.content = ''
 
     def __enter__(self):
-        # print('enter')
-        md5 = hashlib.md5(self.url.encode('utf-8')).hexdigest()
+        cacheId = self.url + ('1' if self.ext else '')
+        md5 = hashlib.md5(cacheId.encode('utf-8')).hexdigest()
         self.fileName = 'cache/' + md5 + '.html'
         if self.cache and os.path.exists(self.fileName):
             # print(f'exist, expired = {self.expired}')
@@ -142,6 +136,7 @@ def loadUrl(url: str, cache: bool =True, expired: int =0):
     with cacher(url, cache, expired) as cache:
         if not cache.content:
             cache.content = curlLoad(url)
+    loadUrl.fileName = cache.fileName
     return cache.content
 
 def curlLoad(url: str, post: Optional[dict] =None, ext: bool=False):
@@ -165,9 +160,9 @@ def curlLoad(url: str, post: Optional[dict] =None, ext: bool=False):
 
     try:
         if post:
-            response = requests.post(url, data=post, headers=headers, auth=auth)
+            response = requests.post(url, data=post, headers=headers, auth=auth, timeout=15)
         else:
-            response = requests.get(url, headers=headers, auth=auth)
+            response = requests.get(url, headers=headers, auth=auth, timeout=15)
     except Exception as e:
         print(f'Ошибка - {str(e)} ({type(e).__name__})')
         return ''
@@ -180,7 +175,7 @@ def curlLoad(url: str, post: Optional[dict] =None, ext: bool=False):
         location = ''
         if 'Location' in response.headers:
             location = response.headers['Location']
-        return [content, response.status_code, location, response.headers['Content-Type']]
+        return [content, str(response.status_code), location, response.headers['Content-Type']]
     else:
         return content
 
@@ -189,9 +184,6 @@ def curlHeader(url):
     response = requests.head(url)
     content = response.text
     return response.headers
-
-u = 'https://mksmedia.ru/'
-print(curlHeader(u))
 
 def getHttpStatus(url):
     response = requests.get(url)
@@ -212,10 +204,10 @@ def getLinks(content, link, opts=None):
     """
     if opts is None:
         opts = {}
-    if not hasattr(getLinks, 'unique'):
-        getLinks.unique = []
+    unique = []
 
-    matches = re.findall(r'\s+href\s*=\s*["\'](.*?)["\']', content, re.I | re.S)
+    matches = re.findall(r'\s+href\s*=\s*["\']?([^\'"\s>]+)', content, re.I | re.S)
+    # print(f'matches={len(matches)}')
 
     matches2 = re.findall(r'location=\'(.*?)\'', content, re.I | re.S)
     links = list(set(matches + matches2))
@@ -257,9 +249,9 @@ def getLinks(content, link, opts=None):
         uniq = url
         if opts.get('skip_numerical_dupl'):
             uniq = re.sub(r'\d+', '', uniq)
-        if (uniq in getLinks.unique) or (urlFull == link):
+        if (uniq in unique) or (urlFull == link):
             continue
-        getLinks.unique.append(uniq)
+        unique.append(uniq)
         output.append(urlFull)
 
     output = sorted(output)
@@ -415,18 +407,18 @@ def getTextDiff(textA, textB, delimiter = "\n"):
     pass
 
 
-
-#print(selector({'x': 1}, ' name="xx"'))
-
-# url = 'https://mksmedia.ru/sozdaniye-saytov/'
-# content = loadUrl(url)
-
-# imgs = getImages(content)
-# pprint.PrettyPrinter(depth=4, indent=4, width=150).pprint(imgs)
-
-
-
-
-
 def pr(data):
     pprint.PrettyPrinter(depth=4, indent=2, width=150).pprint(data)
+
+# site = 'https://nginx.org/ru/docs/beginners_guide.html'
+# content = loadUrl(site)
+# links = getLinks(content, site)
+# print(f'url={site}, fn={loadUrl.fileName}, content = {len(content)} links = {len(links)}')
+
+
+# with open("../test.txt", "r", encoding="utf-8") as file:
+#     content = file.read()
+
+# content = ' href="xxx"  href=yyyy/>'
+# matches = re.findall(r'\s+href\s*=\s*["\']?([^\'"\s>]+)', content, re.I | re.S)
+# print(matches)

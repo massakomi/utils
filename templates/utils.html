@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
+    <title>Утилиты</title>
+    <style type="text/css">
+    h2 {font-size:18px; margin-top:15px; margin-bottom:5px;}
+    .mb30 {margin-bottom:30px;}
+    textarea {width:95%; height:30px}
+    .auto {display:inline;}
+    .big-inputs input {font-size:18px; padding:2px 10px;}
+    #loader {
+        background: white url('http://komu.info/images/upload_inv_mono.gif') center center no-repeat;
+        width: 64px;
+        height: 16px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        padding: 10px;
+        border: 1px solid #eee;
+        display:none;
+    }
+    .clickshow + * {display:none;}
+    .clickshow {text-decoration:underline; cursor: pointer; color:#aaa}
+    .clickshow:hover {text-decoration:none;}
+    </style>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script type="text/javascript">
+    function alertAjax(query)
+    {
+        $.post('', query, function(data) {
+            // alert(data)
+            $('#outputContent').html(data)
+        });
+    }
+    $(document).ready(function(){
+        $(document).ajaxSend(function() {
+            $('#loader').show();
+        });
+        $(document).ajaxStop(function() {
+            $('#loader').hide();
+        });
+        $('input[type=submit]').click(function(data) {
+            var h = $(this).parents('form').find('input[name=submit]');
+            h.val(this.name)
+        })
+        $('.clickshow').click(function() {
+            $(this).removeClass('clickshow')
+            $(this).next().show()
+        })
+        $('.auto').submit(function(data) {
+            var form = this
+            $.post('', $(this).serialize(), function(data) {
+                $(form).find('.result').html(data)
+            });
+            return false;
+        })
+    });
+    </script>
+</head><body>
+    <div id="loader"></div>
+
+
+<?php
+if ($_POST['compare1']) {
+
+    ?>
+    <style>
+    table.tt {empty-cells:show; border-collapse:collapse; margin:10px 0}
+    table.tt td {border:1px solid #ccc; padding: 3px; vertical-align: top;}
+    </style>
+    <table class="tt">
+    <tr>
+        <td></td>
+        <td><?=$t1?></td>
+        <td><?=$t2?></td>
+    </tr>
+    <tr>
+        <td>strlen</td>
+        <td><?=strlen($t1)?></td>
+        <td><?=strlen($t2)?></td>
+    </tr>
+    <tr>
+        <td>mb_strlen</td>
+        <td><?=mb_strlen($t1)?></td>
+        <td><?=mb_strlen($t2)?></td>
+    </tr>
+    <tr>
+        <td>Посимвольный перебор mb_strlen + mb_substr</td>
+        <td><?=$t1_mb?></td>
+        <td><?=$t2_mb?></td>
+    </tr>
+    <tr>
+        <td>Посимвольный перебор strlen + substr</td>
+        <td><?=$t1s?></td>
+        <td><?=$t2s?></td>
+    </tr>
+    </table>
+    <?php
+    return ;
+}
+?>
+
+<h2 class="clickshow">Сравнение двух строк</h2>
+<form method="post">
+    <textarea name="compare1"></textarea>
+    <textarea name="compare2"></textarea>
+
+    <input type="submit" value="Сравнить" />
+</form>
+
+<!--
+<?php
+if ($_POST['generate']) {
+    ?>
+    <textarea oncopy="setTimeout(function() {document.getElementById('generateTxt').focus(); document.getElementById('results').remove();}, 100); "
+        style="width:100%; height:100px;" id="results"><?=htmlspecialchars($result)?></textarea>
+    <script type="text/javascript">
+    document.getElementById('results').select()
+    </script>
+    <?php
+}
+?>-->
+
+<h2>Генерация тегов</h2>
+<form method="post">
+    <input type="hidden" name="generate" value="1">
+    <textarea name="content" id="generateTxt" style="height:100px;"></textarea>
+    <div class="big-inputs">
+    <input type="submit" name="ul-gen" value="ul" style="width:100px;" />
+    <input type="submit" name="ol-gen" value="ol" style="width:100px;" />
+    <input type="submit" name="p-gen" value="p" />
+    <input type="submit" name="td" value="td" />
+    <input type="submit" name="ph2-gen" value="h2+p" />
+    <input type="submit" name="spec" value="spec" />
+    <input type="submit" name="full" value="full" />
+    <input type="submit" name="table" value="table" />
+    <input type="submit" name="extract-links" value="extract-links" title="Извлечь ссылки из текста" />
+    </div>
+    <a href="#" class="clickshow">перенос альтов с html</a><div>
+        <textarea name="alts_text" placeholder="html, куда надо вставить альты" style="height:100px;"></textarea>
+        <textarea name="alts_from" placeholder="html код картинок с альтами" style="height:100px;"></textarea>
+    </div>
+</form>
+
+
+<h2>Проверка http статуса массива ссылок</h2>
+
+<div style="margin-bottom:5px;">
+<input type="text" name="url-check" style="width:500px;" onfocus="$('#content').show()" placeholder="url (или клик чтобы открыть большой textarea)" value="" />
+<select name="url-check-type">
+    <option value="httpstatus">Показать http status</option>
+    <option value="curlbody">Показать body</option>
+    <option value="headers">Показать headers</option>
+    <option value="proxy">Показать прокси</option>
+    <option value="sitemap">Извлечь ссылки sitemap.xml</option>
+    <option value="extract-links">Извлечь ссылки</option>
+    <option value="array=1&extract-links">Извлечь ссылки для массива</option>
+</select>
+<input class="btn" type="button" onclick="alertAjax($('select[name=url-check-type]').val()+'='+encodeURIComponent($('input[name=url-check]').val())); return false;" value="Выполнить">
+</div>
+<div id="outputContent"></div>
+
+<textarea id="content" style="width:95%; height:100px; display:none;"></textarea>
+<input onclick="checkAll(this, 'proxy'); return false;" type="button" value="Проверить proxy" />
+<input onclick="checkAll(this, 'http'); return false;" type="button" value="Проверить http" />
+<input onclick="checkAll(this, 'w3c'); return false;" type="button" value="Проверить w3c" />
+<input onclick="checkAll(this, 'csv'); return false;" type="button" value="csv" />
+<input onclick="checkAll(this, 'test'); return false;" type="button" value="Test" />
+<div id="results" class="mb30"></div>
+<script type="text/javascript">
+function checkAll(obj, mode)
+{
+    obj.disabled = true;
+    setTimeout(function() {
+        obj.disabled = false
+    }, 5000);
+    var val = document.getElementById('content').value;
+    ids = val.split("\n");
+    currentIndex = 0;
+    checkByIndex(mode)
+    document.getElementById('results').innerHTML = '';
+}
+function checkByIndex(mode)
+{
+    if (typeof(ids[currentIndex]) == 'undefined') {
+        return ;
+    }
+    var url = ids[currentIndex];
+    $.post('', 'mode='+mode+'&url='+encodeURIComponent(url)+'&index='+currentIndex, function(data) {
+        if (data != '') {
+            var style = '';
+            if (mode == 'http') {
+                if (data.indexOf('200') < 0) {
+                	style = 'color:red'
+                }
+            }
+
+            if (data != 'skip') {
+                if (mode == 'test') {
+                	document.getElementById('results').innerHTML += '<div style="'+style+'">'+currentIndex+'/'+ids.length+') <a href="'+url+'">'+url+'</a> '+data+'</div>';
+                } else {
+                    document.getElementById('results').innerHTML += '<div style="'+style+'">'+currentIndex+'/'+ids.length+') <a href="'+url+'">'+url+'</a> '+data+'</div>';
+                }
+            }
+
+
+            currentIndex ++;
+            checkByIndex(mode)
+        }
+    });
+}
+</script>
+
+
+<h2 class="clickshow">Операции с файлами</h2>
+<form method="post" class="auto">
+    <input type="text" name="folderActs" value="" style="width:300px;" placeholder="Массовые операции с файлами папки" />
+    <input type="text" name="evalAct" placeholder="$name = strtolower($name)" style="width:300px; font-family: Consolas;" />
+    <input type="submit" name="view" value="Показать файлы">
+    <input type="submit" name="test" value="Протестировать">
+    <input type="submit" name="exec" value="Выполнить">
+    <input type="hidden" name="submit" value="">
+    <span class="result"></span>
+</form>
+<br />
+<form method="post" class="auto">
+    <?php
+    $data = scanFiles('C:\Users\Andrew\Documents', ['onlyDirs' => true, 'utf' => true]);
+    selector($data, ' name="makeFolders" style="width:200px;"', array('values' => false));
+    ?>
+    <input type="submit" value="Создать папки из файлов">
+    <span class="result"></span>
+</form>
+
+<h2>Разное</h2>
+
+<input type="button" value="Показать PATH" onclick="alertAjax('viewpath=1'); return false;">
+<input type="button" value="Протестировать html / js" onclick="window.open('utils.php?htmltest', '', 'width=800&height=600'); return false;">
+
+<form method="post" class="auto">
+    <input type="text" name="md5" value="" style="width:100px;" placeholder="md5" />
+    <input type="submit" value="Go">
+    <span class="result"></span>
+</form>
+
+
+<h2>Выкачка CSS</h2>
+<form method="post">
+    <input type="text" name="css-loader" placeholder="http://website.ru" style="width:200px;" value="<?=$_POST['css-loader']?>" />
+    <!--
+    <?php
+    $url = $_POST['css-loader'];
+    if ($url) {
+
+    }
+    ?>-->
+    <input type="submit" value="Выкачать" />
+</form>
+
+
+
+
+<!--
+<?php
+$cssFile = $_POST['css-file'];
+?> -->
+
+<form action="" method="post">
+    <textarea name="content-html" style="width:100%; height:200px" placeholder="Извлечь ссылки на картинки из контента тегов"></textarea>
+    <input type="submit">
+</form>
+
+<?php
+
+if ($_POST['content-html']) {
+    preg_match_all('~href="(http.*?.(jpe?g|png))"~is', $_POST['content-html'], $a);
+    echo implode('<br>', $a[1]);
+}
+
+?>
+
+
+
+
+</body></html>

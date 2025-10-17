@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
+    <title>Мета проверка, что мета забиты правильно</title>
+</head><body>
+
+<p>Проверка на внесение мета-тегов по списку урлов и метатегов из csv</p>
+
+<form method="post">
+    <textarea name="csv" style="width:95%; height:100px" placeholder="CSV контент с полями url, title, description, keywords">{{ csv }}</textarea>
+
+    <p>
+        <label><input type="checkbox" checked name="cash" value="1"> cash</label>
+    </p>
+
+    <input type="submit" value="Отправить" />
+</form>
+
+
+{% if content %}
+    <hr />
+    {{ content }}
+{% endif %}
+
+
+</body></html>

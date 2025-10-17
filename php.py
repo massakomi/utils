@@ -1,31 +1,10 @@
 import re
 
 content = """
-function scanFiles($dir, $opts=[])
-{
-    if (!file_exists($dir)) {
-        return array();
+    echo '<h3>Наденные титлы</h3>';
+    foreach ($titles as $k => $v) {
+        echo '<div><a href="'.$k.'">'.$v.'</a></div>';
     }
-    $a = scandir($dir);
-    $data = array();
-    foreach ($a as $k => $v) {
-        $path = $dir.'/'.$v;
-        if ($v == '.' || $v == '..') {
-            continue;
-        }
-        if ($opts['onlyDirs'] && !is_dir($path)) {
-            continue;
-        }
-        if ($opts['onlyFiles'] && is_dir($path)) {
-            continue;
-        }
-        if ($opts['utf']) {
-            $path = iconv('windows-1251', 'utf-8', $path);
-        }
-        $data []= $path;
-    }
-    return $data;
-}
 """
 
 

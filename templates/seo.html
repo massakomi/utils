@@ -6,7 +6,7 @@
     <style type="text/css">
 form, div.row {margin-bottom:10px;}
 #loader {
-    background: white url('/templates/loading.gif') center center no-repeat;
+    background: white url('/utils/templates/loading.gif') center center no-repeat;
     width: 64px;
     height: 16px;
     position: fixed;
@@ -51,13 +51,12 @@ function processLink(link, referer)
     $('#scanResults').prop('hidden', false)
     $('#scanResults').append('<tr><td>'+counts+') <a href="'+link+'" title="Ref: '+referer+'">'+link+'</a></td><td data-link="'+link+'"></td></tr>')
     counts ++
-    $.post('', 'link='+link, function(data) {
-        var data = JSON.parse(data)
+    $.post('/scan', 'link='+link, function(data) {
         $('td[data-link="'+link+'"]').html('<b>'+data.length+'</b>');
         if (data.links) {
-            for (var i in data.links) {
+            for (let i in data.links) {
                 sublink = data.links[i];
-                processLink(sublink, link)
+                // processLink(sublink, link)
             }
         }
     })
@@ -73,20 +72,20 @@ function processLink(link, referer)
 <div class="row"><a href="?nocash=1">Обновить кэш</a></div>
 
 
-<form method="post">
-    <input type="text" name="urlLinks" placeholder="Показать ссылки со страницы" style="width:500px;" value="{{ urlLinks }}" />
+<form action="/urllinks" method="post" target="_blank">
+    <input type="text" name="urllinks" placeholder="Показать ссылки со страницы" style="width:500px;" value="{{ urlLinks }}" />
     <input type="submit" value="Показать ссылки со страницы" />
 </form>
 
 
-<form method="post">
-    <input type="text" name="urlTest" placeholder="Быстрый тест url (статус, location, strlen)" style="width:500px;" value="{{ urlTest }}" />
+<form action="/urltest" method="post" target="_blank">
+    <input type="text" name="urltest" placeholder="Быстрый тест url (статус, location, strlen)" style="width:500px;" value="{{ urlTest }}" />
     <input type="submit" value="Быстрый тест url (статус, location, strlen)" />
 </form>
 
 
-<form method="post">
-    <input type="text" name="seoTest" placeholder="Полный тест url" style="width:500px;" value="{{ seoTest }}" />
+<form action="/seotest" method="post" target="_blank">
+    <input type="text" name="seotest" placeholder="Полный тест url" style="width:500px;" value="{{ seoTest }}" />
     <input type="submit" value="Полный тест url" />
 </form>
 <!--
@@ -106,7 +105,7 @@ function processLink(link, referer)
 -->
 
 <form method="post" onsubmit="startScan(this); return false;">
-    <input type="text" name="scan" placeholder="http://site.ru" style="width:500px;" value="" />
+    <input type="text" name="scan" placeholder="http://site.ru" style="width:500px;" value="{{ seoTest }}" />
     <input type="submit" value="Сканирование сайта" />
 </form>
 
